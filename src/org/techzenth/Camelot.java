@@ -22,6 +22,7 @@ public class Camelot {
 	public static void main(String[] args) {
 		System.out.println("Camelot!!!");
 		try{
+			
 			String cn = UIManager.getSystemLookAndFeelClassName();
 			System.out.println(cn);
 			UIManager.setLookAndFeel(cn);

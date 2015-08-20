@@ -3,20 +3,23 @@
  */
 package org.techzenth.Models;
 
+import java.util.Random;
+
 /**
  * @author Andre_Bonner
  *
  */
 public class TextEditModel {
+	private Random gen = new Random();
 	private int textedit;
 	private String AppName;
-		
+			
 	public TextEditModel(){
-		
+		this.textedit= gen.nextInt(1000);
 	}
 	
 	public TextEditModel(int t){
-		this.textedit=t;
+		this.textedit= gen.nextInt(1000*t);
 	}
 	
 	public int getTextEditValue(){
@@ -30,4 +33,6 @@ public class TextEditModel {
 	public String getAppName(){
 		return AppName;
 	}
-	}
+	
+	
+}

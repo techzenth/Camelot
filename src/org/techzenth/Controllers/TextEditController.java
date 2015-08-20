@@ -5,6 +5,7 @@ package org.techzenth.Controllers;
 
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
@@ -14,6 +15,9 @@ import java.awt.print.PrinterJob;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 import javax.print.attribute.HashPrintRequestAttributeSet;
 import javax.print.attribute.PrintRequestAttributeSet;
 import javax.swing.AbstractAction;
@@ -21,6 +25,7 @@ import javax.swing.Action;
 import javax.swing.ActionMap;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
+import javax.swing.JRadioButton;
 import javax.swing.text.DefaultEditorKit;
 
 import org.techzenth.Models.TextEditModel;
@@ -59,6 +64,24 @@ public class TextEditController {
 	private Action ViewHelp;
 	private Action About;
 	private ActionMap m;
+	
+	// Dialog ActionListeners
+	private ActionListener FindNClick;
+	private ActionListener FindNRClick;
+	private ActionListener ReplaceClick;
+	private ActionListener ReplaceAllClick;
+	private ActionListener CancelClick;
+	private ActionListener CancelRClick;
+	private ActionListener GotoClick;
+	private ActionListener CancelGClick;
+	private ActionListener OkFClick;
+	private ActionListener CancelFClick;
+	private ActionListener OkAboutClick;
+	
+	
+	private SimpleDateFormat sdfDate;
+	private Date now;
+	private static int wordCount, lastIndex;
 
 	public TextEditController(TextEditModel teM, TextEditView teV) {
 		this.teModel = teM;
@@ -77,6 +100,7 @@ public class TextEditController {
 		};
 		teView.getArea().addKeyListener(keyListener);
 
+		// MenuItem ActionListeners
 		Open = new AbstractAction("Open") {
 			/**
 			 * 
@@ -132,6 +156,7 @@ public class TextEditController {
 					PrinterJob job = PrinterJob.getPrinterJob();
 					PrintRequestAttributeSet aset = new HashPrintRequestAttributeSet();
 					PageFormat pf = job.pageDialog(aset);
+					System.out.println(pf.toString());
 					// job.setPrintable(teView.getArea(),pf);
 				} catch (Exception ex) {
 					ex.printStackTrace();
@@ -167,6 +192,7 @@ public class TextEditController {
 
 			public void actionPerformed(ActionEvent e) {
 				saveOld();
+				System.out.println("Exit with value = "+ teModel.getTextEditValue());
 				System.exit(0);
 			}
 		};
@@ -180,6 +206,7 @@ public class TextEditController {
 
 			public void actionPerformed(ActionEvent e) {
 				// undo
+				teView.getUndoMan().undo();
 			}
 		};
 		teView.getUndoItem().addActionListener(Undo);
@@ -201,6 +228,7 @@ public class TextEditController {
 
 			public void actionPerformed(ActionEvent e) {
 				// delete
+				teView.getArea().replaceSelection("");
 			}
 		};
 		teView.getDeleteItem().addActionListener(Delete);
@@ -213,6 +241,8 @@ public class TextEditController {
 
 			public void actionPerformed(ActionEvent e) {
 				// find
+				if(teView.getFindTxt().getText().isEmpty())
+					teView.getFindDialog().setVisible(true);
 			}
 		};
 		teView.getFindItem().addActionListener(Find);
@@ -224,7 +254,8 @@ public class TextEditController {
 			private static final long serialVersionUID = 1L;
 
 			public void actionPerformed(ActionEvent e) {
-				// find next
+				// TODO - find next
+				
 			}
 		};
 		teView.getFindNextItem().addActionListener(FindNext);
@@ -237,6 +268,7 @@ public class TextEditController {
 
 			public void actionPerformed(ActionEvent e) {
 				// replace
+				teView.getReplaceDialog().setVisible(true);
 			}
 		};
 		teView.getReplaceItem().addActionListener(Replace);
@@ -249,6 +281,7 @@ public class TextEditController {
 
 			public void actionPerformed(ActionEvent e) {
 				// go to
+				teView.getGotoDialog().setVisible(true);
 			}
 		};
 		teView.getGoToItem().addActionListener(GoTo);
@@ -261,6 +294,7 @@ public class TextEditController {
 
 			public void actionPerformed(ActionEvent e) {
 				// select all
+				teView.getArea().selectAll();
 			}
 		};
 		teView.getSelectAllItem().addActionListener(SelectAll);
@@ -273,6 +307,12 @@ public class TextEditController {
 
 			public void actionPerformed(ActionEvent e) {
 				// time / date
+				now = new Date();
+				sdfDate = new SimpleDateFormat("hh:mm a MM/dd/yyyy");
+				String str1;
+				str1 = sdfDate.format(now);
+				System.out.println(str1);
+				teView.getArea().insert(str1, teView.getArea().getSelectionStart());
 			}
 		};
 		teView.getTimeDate().addActionListener(TimeDate);
@@ -285,7 +325,15 @@ public class TextEditController {
 
 			public void actionPerformed(ActionEvent e) {
 				// word wrap
-				teView.getArea().setWrapStyleWord(true);
+				if(teView.getArea().getWrapStyleWord()==false){
+					teView.getWordWrapItem().setSelected(true);
+					teView.getArea().setWrapStyleWord(true);
+					teView.getGoToItem().setEnabled(false);
+				}else{
+					teView.getWordWrapItem().setSelected(false);
+					teView.getArea().setWrapStyleWord(false);
+					teView.getGoToItem().setEnabled(true);
+				}
 			}
 		};
 		teView.getWordWrapItem().addActionListener(WordWrap);
@@ -298,6 +346,7 @@ public class TextEditController {
 
 			public void actionPerformed(ActionEvent e) {
 				// font dialog
+				teView.getFontDialog().setVisible(true);
 			}
 		};
 		teView.getFontMItem().addActionListener(FontA);
@@ -310,6 +359,15 @@ public class TextEditController {
 
 			public void actionPerformed(ActionEvent e) {
 				// status bar
+				if(teView.getStatusbar().isVisible()){
+					System.out.println("Selected");
+					teView.getStatusbar().setVisible(false);
+					teView.getStatusBarItem().setSelected(false);
+				}else{
+					System.out.println("Not Selected");
+					teView.getStatusbar().setVisible(true);
+					teView.getStatusBarItem().setSelected(true);					
+				}
 			}
 		};
 		teView.getStatusBarItem().addActionListener(StatusBar);
@@ -321,7 +379,7 @@ public class TextEditController {
 			private static final long serialVersionUID = 1L;
 
 			public void actionPerformed(ActionEvent e) {
-				// view help
+				// TODO - view help
 			}
 		};
 		teView.getViewHelpItem().addActionListener(ViewHelp);
@@ -333,12 +391,119 @@ public class TextEditController {
 			private static final long serialVersionUID = 1L;
 
 			public void actionPerformed(ActionEvent e) {
-				// about dialog
+				// TODO - about dialog
+				teView.getaboutDialog().setVisible(true);
 			}
 		};
 		teView.getAboutItem().addActionListener(About);
+		
+		// Dialog Action Listeners
+		FindNClick = new ActionListener(){
+			public void actionPerformed(ActionEvent e) {
+				// TODO - FindNext
+				findNext(teView.getFindTxt().getText(), teView.getFindDirection(), teView.getMatchCaseChk().isSelected());
+			}
+		};
+		teView.getFindBtn().addActionListener(FindNClick);
+		
+		FindNRClick = new ActionListener(){
+			public void actionPerformed(ActionEvent e) {
+				// TODO - FindNext
+			}
+		};
+		teView.getFindRBtn().addActionListener(FindNRClick);
+		
+		CancelClick = new ActionListener(){
+			public void actionPerformed(ActionEvent e) {
+				// TODO - Cancel
+				teView.getFindDialog().setVisible(false);
+			}
+		};
+		teView.getCancelBtn().addActionListener(CancelClick);
+		
+		CancelRClick = new ActionListener(){
+			public void actionPerformed(ActionEvent e) {
+				// TODO - Cancel
+				teView.getReplaceDialog().setVisible(false);
+			}
+		};
+		teView.getCancelRBtn().addActionListener(CancelRClick);
+		
+		ReplaceClick = new ActionListener(){
+			public void actionPerformed(ActionEvent e){
+				// TODO - Replace
+			}
+		};
+		teView.getReplaceBtn().addActionListener(ReplaceClick);
+		
+		ReplaceAllClick = new ActionListener(){
+			public void actionPerformed(ActionEvent e){
+				// TODO - Replace All
+			}
+		};
+		teView.getReplaceAllBtn().addActionListener(ReplaceAllClick);
+	
+		GotoClick = new ActionListener(){
+			public void actionPerformed(ActionEvent e){
+				// TODO - Goto
+			}
+		};
+		teView.getGotoBtn().addActionListener(GotoClick);
+		
+		CancelGClick = new ActionListener(){
+			public void actionPerformed(ActionEvent e){
+				// Cancel
+				teView.getGotoDialog().setVisible(false);
+			}
+		};
+		teView.getGotoBtn().addActionListener(CancelGClick);
+		
+		OkFClick = new ActionListener(){
+			public void actionPerformed(ActionEvent e){
+				// TODO - Ok
+				
+			}
+		};
+		teView.getOkFBtn().addActionListener(OkFClick);
+		
+		CancelFClick = new ActionListener(){
+			public void actionPerformed(ActionEvent e){
+				// Cancel
+				teView.getFontDialog().setVisible(false);
+			}
+		};
+		teView.getCancelFBtn().addActionListener(CancelFClick);
+		
+		OkAboutClick = new ActionListener(){
+			public void actionPerformed(ActionEvent e){
+				// OK
+				teView.getaboutDialog().setVisible(false);
+			}
+		};
+		teView.getOkABtn().addActionListener(OkAboutClick);
+		
 	}
-
+	
+	private void findNext(String search, String direction, boolean matchCase){
+		String areaText = new String(teView.getArea().getText());
+		if(matchCase){
+			// must be either upper or lower case
+		}
+		
+			lastIndex = teView.getArea().getText().indexOf(search,lastIndex);
+			teView.getArea().select(lastIndex, lastIndex + search.length());
+			if(lastIndex!=-1){
+				wordCount++;
+				lastIndex += search.length();
+			}else{
+				JOptionPane.showMessageDialog(null, "Cannot find \"" + search + "\"", teModel.getAppName(), JOptionPane.INFORMATION_MESSAGE);
+			}
+		
+		//System.out.println(wordCount);
+		System.out.println(lastIndex);
+		System.out.println(direction);
+	}
+	
 	private void saveFileAs() {
 		if (teView.getfChooser().showSaveDialog(null) == JFileChooser.APPROVE_OPTION)
 			saveFile(teView.getfChooser().getSelectedFile().getAbsolutePath());
